@@ -1,9 +1,9 @@
 # TW-Stock-Quant (次世代量化交易系統核心)
 ## 資料庫系統期末專題報告實作
 
-這是一個展示 **「混合式資料庫架構 (Hybrid Database Architecture)」** 的金融交易系統核心原型。本專案旨在驗證期末報告中關於 **傳統關聯式資料庫 (MySQL)**、**記憶體資料庫 (Redis)** 與 **雲端 NoSQL (Firebase)** 在現代高併發系統中的協作模式。
+這是展示 **「混合式資料庫架構 (Hybrid Database Architecture)」** 的金融交易系統核心原型。本專案旨在驗證期末報告中關於 **傳統關聯式資料庫 (MySQL)**、**記憶體資料庫 (Redis)** 與 **雲端 NoSQL (Firebase)** 在現代高併發系統中的協作模式。
 
-![System Dashboard](https://via.placeholder.com/800x400?text=TW-Stock-Quant+Dashboard)
+> (請在此處貼上您的系統實機截圖，以展示儀表板功能)
 
 ---
 
