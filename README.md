@@ -3,7 +3,8 @@
 
 這是展示 **「混合式資料庫架構 (Hybrid Database Architecture)」** 的金融交易系統核心原型。本專案旨在驗證期末報告中關於 **傳統關聯式資料庫 (MySQL)**、**記憶體資料庫 (Redis)** 與 **雲端 NoSQL (Firebase)** 在現代高併發系統中的協作模式。
 
-> (請在此處貼上您的系統實機截圖，以展示儀表板功能)
+<img width="1884" height="845" alt="image" src="https://github.com/user-attachments/assets/9ca45d4c-1370-47bf-a2df-9d2ff36e739c" />
+
 
 ---
 
