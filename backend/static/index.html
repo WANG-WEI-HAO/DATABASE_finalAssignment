@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TW-Stock-Quant | 高頻量化交易核心</title>
+    <!-- Vue.js 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div id="app">
+        <header>
+            <div class="brand">TW-Stock-Quant</div>
+            <div class="status-badge">
+                <div class="status-dot"></div>
+                <span>{{ connectionStatus }}</span>
+            </div>
+        </header>
+
+        <main>
+            <!-- Left Column: Market Data -->
+            <div class="monitor-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📉 即時行情監控 (Real-time Market)</h2>
+                        <div class="monitor-actions"></div>
+                    </div>
+
+                    <div class="input-group">
+                        <input v-model="customStockId" @keyup.enter="addStock" type="text"
+                            placeholder="輸入股票代碼 (例: 2330)...">
+                        <button @click="addStock">加入監控</button>
+                    </div>
+
+                    <!-- Visual Architecture Flow -->
+                    <div class="arch-diagram">
+                        <!-- Lines -->
+                        <div class="arch-line line-1"></div>
+                        <div class="arch-line line-2"></div>
+                        <div class="arch-line line-3"></div>
+
+                        <!-- Packet -->
+                        <div class="packet"
+                            :class="{ 'animate-quote': isQuoteFlowing, 'animate-trade': isTradeFlowing }"></div>
+
+                        <!-- Nodes -->
+                        <div class="arch-node" id="node-cloud">
+                            <div class="node-icon">☁️</div>
+                            <div class="node-label">Market</div>
+                        </div>
+                        <div class="arch-node" :class="{ active: systemStats.redis.status.includes('Online') }"
+                            id="node-redis">
+                            <div class="node-icon">⚡</div>
+                            <div class="node-label">Redis</div>
+                        </div>
+                        <div class="arch-node" id="node-api">
+                            <div class="node-icon">🛡️</div>
+                            <div class="node-label">API</div>
+                        </div>
+                        <div class="arch-node" :class="{ active: systemStats.mysql.status.includes('Online') }"
+                            id="node-mysql">
+                            <div class="node-icon">💾</div>
+                            <div class="node-label">MySQL</div>
+                        </div>
+                    </div>
+
+                    <div class="stock-grid">
+                        <div class="stock-card" v-for="stock in stocks" :key="stock.id">
+                            <div class="stock-header">
+                                <span class="stock-symbol">{{ stock.id }}</span>
+                                <span class="stock-name">{{ stock.name }}</span>
+                            </div>
+                            <div class="stock-price">{{ stock.price }}</div>
+                            <div class="stock-change" :class="stock.change > 0 ? 'up' : 'down'">
+                                <span v-if="stock.change > 0">▲</span>
+                                <span v-else>▼</span>
+                                {{ stock.change }}%
+                            </div>
+                            <!-- Simulation Action -->
+                            <button @click="simulateTrade(stock)"
+                                style="margin-top: 1rem; width: 100%; background: rgba(255,255,255,0.1); font-size: 0.8rem;">
+                                🛒 模擬下單 (Test DB)
+                            </button>
+                            <div style="margin-top: 0.5rem; font-size: 0.75rem; color: #666; text-align: right;">
+                                Src: {{ stock.source }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: System Status -->
+            <div class="system-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">🖥️ 系統日誌 (System Logs)</h2>
+                    </div>
+                    <div class="console-window">
+                        <div class="log-entry" v-for="(log, i) in logs" :key="i">
+                            <span class="log-time">[{{ log.time }}]</span>
+                            <span class="log-msg">{{ log.msg }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 1.5rem;">
+                    <div class="card-header">
+                        <h2 class="card-title">⚙️ 架構狀態監控 (Infrastructure)</h2>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.8rem; color: var(--text-secondary);">
+                        <!-- Broker Status -->
+                        <div
+                            style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.5rem;">
+                            <span>Broker API</span>
+                            <span style="font-weight: bold; color: white;">{{ systemStats.broker }}</span>
+                        </div>
+
+                        <!-- Redis Status -->
+                        <div
+                            style="display: flex; flex-direction: column; gap: 0.2rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.5rem;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Redis Cache</span>
+                                <span>{{ systemStats.redis.status }}</span>
+                            </div>
+                            <div
+                                style="display: flex; justify-content: space-between; font-size: 0.8rem; opacity: 0.7;">
+                                <span>Cached Keys</span>
+                                <span>{{ systemStats.redis.keys }}</span>
+                            </div>
+                            <div
+                                style="display: flex; justify-content: space-between; font-size: 0.8rem; opacity: 0.7;">
+                                <span>Memory</span>
+                                <span>{{ systemStats.redis.memory }}</span>
+                            </div>
+                        </div>
+
+                        <!-- MySQL Status -->
+                        <div style="display: flex; flex-direction: column; gap: 0.2rem;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>MySQL Database</span>
+                                <span>{{ systemStats.mysql.status }}</span>
+                            </div>
+                            <div
+                                style="display: flex; justify-content: space-between; font-size: 0.8rem; opacity: 0.7;">
+                                <span>Total Transactions</span>
+                                <span>{{ systemStats.mysql.rows }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- App Logic -->
+    <script type="module" src="/static/app.js"></script>
+</body>
+
+</html>

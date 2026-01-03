@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+redis
+sqlalchemy
+pymysql
+python-dotenv
+requests
+pydantic
+pydantic-settings
+yfinance
+# fubon-neo # 需要自行安裝或確認來源

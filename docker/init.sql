@@ -1,0 +1,12 @@
+# MySQL Init
+CREATE DATABASE IF NOT EXISTS quant_db;
+USE quant_db;
+
+CREATE TABLE IF NOT EXISTS transactions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    stock_id VARCHAR(10) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    quantity INT NOT NULL,
+    action ENUM('BUY', 'SELL') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
